@@ -1,0 +1,6 @@
+[submodule "third-party/zydis"]
+	path = third-party/zydis
+	url = https://github.com/zyantific/zydis
+[submodule "third-party/asmjit"]
+	path = third-party/asmjit
+	url = https://github.com/asmjit/asmjit
