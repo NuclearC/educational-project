@@ -1,8 +1,5 @@
 #include "main.hpp"
-#include "backend/memory/memory.hpp"
-#include "backend/cpu/cpu.hpp"
-#include "backend/cpu/disasm.hpp"
-#include "reader.hpp"
+#include <memory>
 
 #include <Zydis/Zydis.h>
 #include <inttypes.h>
@@ -12,22 +9,14 @@
 
 int main(int argc, char *argv[]) {
   core::gui::Window wnd{};
-  core::rom::RomInfo info = core::rom::Reader::read(std::filesystem::u8path(
-      R"(E:\My Downloads\Sonic Mania v1.03\PS4_Sonic_Mania_CUSA07023_01_Game_Full_psgames.by\CUSA07023\eboot.bin)"));
-  core::backend::cpu::VirtualCpu cpu{};
-  core::backend::cpu::DisAsm disasm(cpu);
-  core::backend::memory::MemoryController mcontrol{};
+  core::Emulator emu{};
 
-  const auto pointer = info.data.data() + 0x160 + info.header.e_entry;
-  const auto instruction =
-      disasm.try_decode((uint64_t)pointer, pointer, info.data.size());
-
-  disasm.print(instruction);
-
-  disasm.try_execute(instruction);
-
+  emu.reset();
+  emu.load_file(std::filesystem::u8path("E:\\Server-Out\\test.elf"));
+  
   while (true) {
     wnd.poll_events();
+    emu.poll();
   }
 
   return 0;

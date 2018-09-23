@@ -86,7 +86,19 @@ struct Elf64_HeaderS {
 };
 
 struct Elf64_Phdr {
-  uint32_t p_type;
+  enum P_TYPE : Elf64_Word {
+    PT_NULL,
+    PT_LOAD,
+    PT_DYNAMIC,
+    PT_INTERP,
+    PT_NOTE,
+    PT_SHLIB,
+    PT_PHDR,
+    PT_LOOS = 0x60000000,
+    PT_HIOS = 0x6fffffff,
+    PT_LOPROC = 0x70000000,
+    PT_HIPROC = 0x7fffffff
+  } p_type;
   uint32_t p_flags;
   Elf64_Off p_offset;
   Elf64_Addr p_vaddr;

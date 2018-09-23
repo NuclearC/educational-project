@@ -4,23 +4,24 @@
 namespace core {
 namespace backend {
 namespace cpu {
-
-Registers::Registers() : regs1{} {}
-Registers::~Registers() {}
-
-void Registers::write1(size_t data_size, uint8_t reg, uint64_t value) {
-  if (reg > 8)
-    throw std::exception("bad register");
-
-  if (data_size == 32 || data_size == 16 || data_size == 64)
-    regs1[ModRM_RegisterIndices_1632[reg]] = value & (data_size - 1);
-  else if (data_size == 8)
-    regs1[ModRM_RegisterIndices_8[reg]] = value & 0xff;
-  else
-    throw std::exception("bad data size");
+namespace registers {
+void Registers::write_general(uint8_t reg, uint64_t value) { 
+  if (reg & 16) {
+    regs1[reg & ~16] = value & 0xffffffff; 
+  } else if (reg & 32) {
+    regs1[reg & ~32] = value & 0xffff; 
+  } else if (reg & 64) {
+    regs1[reg & ~64] = value & 0xff; 
+  } else if (reg & 128) {
+    regs1[reg & ~128] = value & 0x00ff; 
+  } else {
+    regs1[reg] = value; 
+  }
 }
 
-uint64_t Registers::read1(uint8_t reg) { return uint64_t(); }
+Registers::Registers() {}
+Registers::~Registers() {}
+} // namespace registers
 
 } // namespace cpu
 } // namespace backend

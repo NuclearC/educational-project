@@ -7,6 +7,7 @@
 #include <Zydis/Zydis.h>
 
 #include "backend/cpu/cpu.hpp"
+#include "backend/cpu/vm.hpp"
 
 namespace core {
 namespace backend {
@@ -22,15 +23,18 @@ private:
   ZydisDecoder decoder;
   ZydisFormatter formatter;
   VirtualCpu &cpu;
+  VirtualMachine &vm;
 
 public:
-  DisAsm(VirtualCpu &cpu_);
+  DisAsm(VirtualCpu &cpu_, VirtualMachine& vm_);
   ~DisAsm();
 
-  const InstructionInfo &try_decode(uint64_t pointer, const void *data,
+  InstructionInfo try_decode(uint64_t pointer, const void *data,
                                     size_t length);
   void print(const InstructionInfo& info);
   bool try_execute(const InstructionInfo &info);
+
+  void poll();
 };
 } // namespace cpu
 } // namespace backend

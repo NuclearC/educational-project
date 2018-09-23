@@ -12,7 +12,7 @@ RomInfo Reader::read(std::filesystem::path path) {
 
   res.header = {};
   
-  const auto elf_pos = 0x160;
+  const auto elf_pos = 0;
   in.seekg(elf_pos + 0x0);
   in.read((char *)&res.header, sizeof res.header);
 
@@ -31,7 +31,7 @@ RomInfo Reader::read(std::filesystem::path path) {
     // read program section table
     for (auto num = 0; num < res.header.e_shnum; num++) {
       elf64::Elf64_Shdr section_header_entry = {};
-      in.read((char *)&section_header_entry, sizeof section_header_entry);
+      in.read((char *)&section_header_entry, res.header.e_shentsize);
       res.section_header_table.push_back(section_header_entry);
     }
   }
