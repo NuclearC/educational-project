@@ -16,10 +16,13 @@ private:
   core::backend::cpu::DisAsm disasm;
   core::backend::memory::MemoryController mcontrol;
 
+  bool paused;
+
 public:
   Emulator();
   ~Emulator();
 
+  void state(bool paused_);
   void reset();
   void poll();
   void load_file(std::filesystem::path path);

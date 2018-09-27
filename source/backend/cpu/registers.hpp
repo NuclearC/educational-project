@@ -97,7 +97,7 @@ enum x86RegistersHigh : uint8_t { ah = 128, bh, ch, dh, sih, dih, bph, sph };
 enum x86SegmentRegisters : uint8_t { cs, ds, es, fs, gs, ss };
 
 static constexpr size_t ZydisRegisterIndices[] = {
-    al,   cl,   dl,   bl,   ah,   ch,   dh,   bh,   spl,  bpl,  sil,  dil,
+    0, al,   cl,   dl,   bl,   ah,   ch,   dh,   bh,   spl,  bpl,  sil,  dil,
     r8b,  r9b,  r10b, r11b, r12b, r13b, r14b, r15b, ax,   cx,   dx,   bx,
     sp,   bp,   si,   di,   r8w,  r9w,  r10w, r11w, r12w, r13w, r14w, r15w,
     eax,  ecx,  edx,  ebx,  esp,  ebp,  esi,  edi,  r8d,  r9d,  r10d, r11d,
@@ -120,6 +120,8 @@ public:
   uint64_t regs2[6];
 
   void write_general(uint8_t reg, uint64_t value);
+
+  uint64_t read_general(uint8_t reg);
 
 private:
 public:

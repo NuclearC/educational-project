@@ -2,19 +2,29 @@
 
 namespace core {
 Emulator::Emulator()
-    : mcontrol{}, cpu(mcontrol), disasm(cpu, vm), rom_info{}, vm(cpu, mcontrol) {}
+    : mcontrol{}, cpu(mcontrol), disasm(cpu, vm), rom_info{},
+      vm(cpu, mcontrol, this) {}
 
 Emulator::~Emulator() {}
+
+void Emulator::state(bool paused_) { paused = paused_; }
 
 void Emulator::reset() { cpu.reset(); }
 
 void Emulator::poll() {
-  disasm.poll();
-  cpu.poll();
+  if (!paused) {
+    disasm.poll();
+    cpu.poll();
+  }
 }
 
 void Emulator::load_file(std::filesystem::path path) {
   rom_info = rom::Reader::read(path);
+
+  if (rom_info.data.empty()) {
+    throw std::exception("Invalid ELF64 file");
+    return;
+  }
 
   auto &header = rom_info.header;
   auto &program_headers = rom_info.program_header_table;

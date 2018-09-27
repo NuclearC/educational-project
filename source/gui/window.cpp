@@ -2,51 +2,95 @@
 
 namespace core {
 namespace gui {
-LRESULT CALLBACK Window::WndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
 
-  switch (msg) {
-  default:
-    return DefWindowProc(hwnd, msg, wparam, lparam);
-  }
-}
-
-Window::Window() {
-  const auto inst = GetModuleHandle(0);
-  wnd_class = {};
-  wnd_class.cbSize = sizeof(WNDCLASSEX);
-  wnd_class.style = CS_HREDRAW | CS_VREDRAW;
-  wnd_class.lpfnWndProc = Window::WndProc;
-  wnd_class.cbClsExtra = 0;
-  wnd_class.cbWndExtra = 0;
-  wnd_class.hInstance = inst;
-  wnd_class.hIcon = LoadIcon(inst, MAKEINTRESOURCE(IDI_APPLICATION));
-  wnd_class.hCursor = LoadCursor(NULL, IDC_ARROW);
-  wnd_class.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-  wnd_class.lpszMenuName = NULL;
-  wnd_class.lpszClassName = "WindowClass";
-  wnd_class.hIconSm =
-      LoadIcon(wnd_class.hInstance, MAKEINTRESOURCE(IDI_APPLICATION));  
-
-  assert(RegisterClassEx(&wnd_class));
-
-  RECT rect = {0, 0, 640, 480};
-  AdjustWindowRect(&rect, WS_OVERLAPPED, true);
-
-  wnd = CreateWindowEx(WS_EX_OVERLAPPEDWINDOW, "WindowClass", "Emulator", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left,
-                       rect.bottom - rect.top, 0, 0, inst, 0);
-  auto err = GetLastError();
-  ShowWindow(wnd, SW_SHOW);
-  UpdateWindow(wnd);
-}
+Window::Window() : main_wnd(), debug_wnd() {}
 
 Window::~Window() {}
-void Window::poll_events() {
-  MSG msg;
-  if (GetMessage(&msg, NULL, 0, 0)) {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
+
+MainWindow::MainWindow() {
+  auto menu = uiNewMenu("&File");
+  auto item = uiMenuAppendItem(menu, "&Open ELF\tCtrl+O");
+  uiMenuItemOnClicked(item,
+                      [](uiMenuItem *, uiWindow *caller_wnd, void *data) {
+                        MainWindow *wnd = (MainWindow *)data;
+                        auto file = uiOpenFile(caller_wnd);
+                        if (wnd->on_file_open != nullptr) {
+                          wnd->on_file_open(std::string(file));
+                        }
+                      },
+                      this);
+
+  menu = uiNewMenu("&Debug");
+  wnd = uiNewWindow("Emulator", 640, 480, true);
+  uiControlShow(uiControl(wnd));
+}
+MainWindow::~MainWindow() {}
+DebugWindow::DebugWindow() {
+  wnd = uiNewWindow("Debugger", 640, 320, false);
+
+  auto box = uiNewVerticalBox();
+  auto upper_box = uiNewVerticalBox();
+  auto lower_box = uiNewVerticalBox();
+
+  { // the controls
+    auto group = uiNewGroup("Debugging");
+    auto inner_box = uiNewHorizontalBox();
+    uiBoxSetPadded(inner_box, 1);
+    uiGroupSetMargined(group, 1);
+    pause_button = uiNewButton("Pause");
+    resume_button = uiNewButton("Resume");
+    uiButtonOnClicked(pause_button,
+                      [](uiButton *, void *data) {
+                        DebugWindow *wnd = (DebugWindow *)data;
+                        wnd->on_debug_pause();
+                      },
+                      this);
+    uiButtonOnClicked(resume_button,
+                      [](uiButton *, void *data) {
+                        DebugWindow *wnd = (DebugWindow *)data;
+                        wnd->on_debug_resume();
+                      },
+                      this);
+
+    uiBoxAppend(inner_box, uiControl(pause_button), 0);
+    uiBoxAppend(inner_box, uiControl(resume_button), 0);
+
+    uiGroupSetChild(group, uiControl(inner_box));
+    uiBoxAppend(upper_box, uiControl(group), 1);
+  }
+
+  { // tabs
+    auto tab = uiNewTab();
+    { // cpu tab
+      auto inner = uiNewHorizontalBox();
+      uiTabAppend(tab, "CPU", uiControl(inner));
+    }
+
+    { // memory tab
+      auto inner = uiNewHorizontalBox();
+      uiTabAppend(tab, "Memory", uiControl(inner));
+    }
+
+    uiBoxAppend(lower_box, uiControl(tab), 1);
+  }
+
+  uiBoxAppend(box, uiControl(upper_box), 0);
+  uiBoxAppend(box, uiControl(lower_box), 1);
+  uiWindowSetChild(wnd, uiControl(box));
+
+  uiControlShow(uiControl(wnd));
+}
+
+DebugWindow::~DebugWindow() {}
+
+void DebugWindow::set_state(bool paused) {
+  if (paused) {
+    uiControlEnable(uiControl(resume_button));
+    uiControlDisable(uiControl(pause_button));
+  } else {
+    uiControlDisable(uiControl(resume_button));
+    uiControlEnable(uiControl(pause_button));
   }
 }
 } // namespace gui
 } // namespace core
-

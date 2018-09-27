@@ -3,4 +3,5 @@
 
 #include "emulator.hpp"
 #include "gui/window.hpp"
+#include "utils/logger.hpp"
 #endif // MAIN_HPP_

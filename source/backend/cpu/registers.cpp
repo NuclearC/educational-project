@@ -19,7 +19,21 @@ void Registers::write_general(uint8_t reg, uint64_t value) {
   }
 }
 
-Registers::Registers() {}
+uint64_t Registers::read_general(uint8_t reg) {
+  if (reg & 16) {
+    return regs1[reg & ~16] & 0xffffffff;
+  } else if (reg & 32) {
+    return regs1[reg & ~32] & 0xffff;
+  } else if (reg & 64) {
+    return regs1[reg & ~64] & 0xff;
+  } else if (reg & 128) {
+    return regs1[reg & ~128] & 0x00ff;
+  } else {
+    return regs1[reg];
+  }
+}
+
+Registers::Registers() : regs1{}, regs2{}, rip{}, rflags{} {}
 Registers::~Registers() {}
 } // namespace registers
 

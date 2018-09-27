@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "utils/logger.hpp"
+
 namespace core {
 namespace rom {
 

@@ -55,12 +55,12 @@ void DisAsm::poll() {
 
   // check for decoding error
   if (inst_info.instruction_pointer) {
+    // set the instruction pointer to the next instruction address
+    cpu.set_inst_pointer(inst_ptr + inst_info.instruction.length);
     // debug
     print(inst_info);
 
-    if (try_execute(inst_info)) {
-      cpu.set_inst_pointer(inst_ptr + inst_info.instruction.length);
-    } else {
+    if (!try_execute(inst_info)) {
       // wtf
       throw std::exception("failed to execute instruction");
     }
