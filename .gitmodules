@@ -4,3 +4,6 @@
 [submodule "third-party/asmjit"]
 	path = third-party/asmjit
 	url = https://github.com/asmjit/asmjit
+[submodule "third-party/libui"]
+	path = third-party/libui
+	url = https://github.com/andlabs/libui
