@@ -32,7 +32,7 @@ void Emulator::load_file(std::filesystem::path path) {
 
   for (auto &header : program_headers) {
     switch (header.p_type) {
-    case rom::elf64::Elf64_Phdr::PT_LOAD: {
+    case elf64::Elf64_Phdr::PT_LOAD: {
       mcontrol.write(header.p_vaddr, rom_info.data.data() + header.p_offset,
                      header.p_memsz);
     } break;

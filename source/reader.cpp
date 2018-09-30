@@ -21,7 +21,7 @@ RomInfo Reader::read(std::filesystem::path path) {
   const auto elf_pos = 0;
   in.seekg(elf_pos + 0x0);
   in.read((char *)&res.header, sizeof res.header);
-  if (strncmp((const char *)res.header.e_ident.signature + 1, "ELF", 3) != 0) {
+  if (strncmp((const char *)res.header.e_ident.magic + 1, "ELF", 3) != 0) {
     log("Invalid ELF64 signature", LogLevel::kError);
     return {};
   }

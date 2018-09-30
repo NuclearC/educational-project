@@ -36,9 +36,13 @@ private:
 
   bool mov_(const ZydisDecodedInstruction &inst);
   bool add_(const ZydisDecodedInstruction &inst);
+  bool sub_(const ZydisDecodedInstruction &inst);
+  bool xor_(const ZydisDecodedInstruction &inst);
   bool ret_(const ZydisDecodedInstruction &inst);
   bool push_(const ZydisDecodedInstruction &inst);
   bool pop_(const ZydisDecodedInstruction &inst);
+  bool and_(const ZydisDecodedInstruction &inst);
+  bool or_(const ZydisDecodedInstruction &inst);
   bool syscall(const ZydisDecodedInstruction &inst);
 
   bool recompile(const ZydisDecodedInstruction &inst);

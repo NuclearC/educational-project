@@ -55,6 +55,24 @@ bool VirtualMachine::add_(const ZydisDecodedInstruction &inst) {
   return true;
 }
 
+bool VirtualMachine::sub_(const ZydisDecodedInstruction &inst) {
+  if (inst.operandCount != 3)
+    return false;
+  const auto value = get_operand_value(inst.operands[0]),
+             value_to_sub = get_operand_value(inst.operands[1]);
+  write_operand_value(inst.operands[0], value - value_to_sub);
+  return true;
+}
+
+bool VirtualMachine::xor_(const ZydisDecodedInstruction &inst) {
+  if (inst.operandCount != 3)
+    return false;
+  const auto value = get_operand_value(inst.operands[0]),
+             value_to_xor = get_operand_value(inst.operands[1]);
+  write_operand_value(inst.operands[0], value ^ value_to_xor);
+  return true;
+}
+
 bool VirtualMachine::ret_(const ZydisDecodedInstruction &inst) {
   // hang the emulator
   emulator->state(true);
@@ -70,6 +88,24 @@ bool VirtualMachine::push_(const ZydisDecodedInstruction &inst) {
 bool VirtualMachine::pop_(const ZydisDecodedInstruction &inst) {
   write_operand_value(inst.operands[0], cpu.stack.top());
   cpu.stack.pop();
+  return true;
+}
+
+bool VirtualMachine::and_(const ZydisDecodedInstruction &inst) {
+  if (inst.operandCount != 3)
+    return false;
+  const auto value = get_operand_value(inst.operands[0]),
+             next = get_operand_value(inst.operands[1]);
+  write_operand_value(inst.operands[0], value & next);
+  return true;
+}
+
+bool VirtualMachine::or_(const ZydisDecodedInstruction &inst) {
+  if (inst.operandCount != 3)
+    return false;
+  const auto value = get_operand_value(inst.operands[0]),
+             next = get_operand_value(inst.operands[1]);
+  write_operand_value(inst.operands[0], value | next);
   return true;
 }
 
@@ -114,6 +150,10 @@ VirtualMachine::VirtualMachine(VirtualCpu &cpu_,
   inst_mappings[ZYDIS_MNEMONIC_RET] = &VirtualMachine::ret_;
   inst_mappings[ZYDIS_MNEMONIC_PUSH] = &VirtualMachine::push_;
   inst_mappings[ZYDIS_MNEMONIC_POP] = &VirtualMachine::pop_;
+  inst_mappings[ZYDIS_MNEMONIC_XOR] = &VirtualMachine::xor_;
+  inst_mappings[ZYDIS_MNEMONIC_OR] = &VirtualMachine::xor_;
+  inst_mappings[ZYDIS_MNEMONIC_AND] = &VirtualMachine::xor_;
+  inst_mappings[ZYDIS_MNEMONIC_SUB] = &VirtualMachine::xor_;
 
   // initialize asmjit
   code_holder.init(jit_runtime.getCodeInfo());

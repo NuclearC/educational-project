@@ -31,10 +31,14 @@ int main(int argc, char *argv[]) {
   core::gui::Window wnd{};
   core::Emulator emu{};
 
-  wnd.main_wnd.on_file_open = [&emu](std::string filename) {
-    std::lock_guard guard(mutex);
-    log("Loading file " + filename, LogLevel::kInfo);
-    emu.load_file(std::filesystem::u8path(filename));
+  wnd.main_wnd.on_file_open = [&](std::string filename) {
+    {
+      std::lock_guard guard(mutex);
+      log("Loading file " + filename, LogLevel::kInfo);
+      emu.load_file(std::filesystem::u8path(filename));
+    }
+
+    wnd.debug_wnd.on_debug_resume();
   };
 
   wnd.debug_wnd.on_debug_resume = [&]() -> bool {
