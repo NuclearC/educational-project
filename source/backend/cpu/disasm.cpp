@@ -19,8 +19,8 @@ InstructionInfo DisAsm::try_decode(uint64_t pointer, const void *data,
                                           size_t length) {
   ZydisDecodedInstruction instruction;
   // try to decode the instruction 
-  if (ZYDIS_SUCCESS(ZydisDecoderDecodeBuffer(&decoder, data, length, pointer,
-                                             &instruction))) {
+  
+  if (ZYAN_SUCCESS(ZydisDecoderDecodeBuffer(&decoder, data, length, &instruction))) {
     // decode succed, return the result
     return {pointer, instruction};
   } else {
@@ -33,7 +33,7 @@ void DisAsm::print(const InstructionInfo &info) {
   std::cout << std::uppercase << std::hex << std::setw(sizeof uint64_t * 2) << std::setfill('0') << info.instruction_pointer << std::flush;
   char buffer[256];
   ZydisFormatterFormatInstruction(&formatter, &info.instruction, buffer,
-                                  sizeof(buffer));
+                                  sizeof(buffer), ZYDIS_RUNTIME_ADDRESS_NONE);
 
   std::cout << " " << buffer << std::endl;
 }

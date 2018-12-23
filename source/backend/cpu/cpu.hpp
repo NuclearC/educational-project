@@ -14,7 +14,7 @@ class VirtualCpu {
 
 private:
   registers::Registers regs;
-  std::stack<uint64_t> stack;
+  // std::stack<uint64_t> stack;
 
   memory::MemoryController &mcontrol;
 public:
@@ -25,6 +25,8 @@ public:
   char *fetch();
 
   void set_inst_pointer(uint64_t val);
+  void set_stack_pointer(uint64_t val);
+  void set_base_pointer(uint64_t val);
   uint64_t get_inst_pointer();
   void reset();
   void poll();

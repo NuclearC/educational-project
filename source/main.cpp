@@ -21,6 +21,7 @@ using core::utils::log;
 using core::utils::LogLevel;
 
 int main(int argc, char *argv[]) {
+
   log("Initializing the Libui", LogLevel::kInfo);
 
   uiInitOptions ui_init_options = {};
@@ -64,9 +65,14 @@ int main(int argc, char *argv[]) {
   emu.reset();
 
   std::thread emu_thread = std::thread([&emu]() {
-    while (true) {
-      std::lock_guard guard(mutex);
-      emu.poll();
+    try {
+      emu.initialize();
+      while (true) {
+        std::lock_guard guard(mutex);
+        emu.poll();
+      }
+    } catch (std::exception e) {
+      log("Exception thrown: " + std::string(e.what()), LogLevel::kError);
     }
   });
 

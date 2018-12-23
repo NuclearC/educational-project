@@ -14,7 +14,7 @@ MainWindow::MainWindow() {
                       [](uiMenuItem *, uiWindow *caller_wnd, void *data) {
                         MainWindow *wnd = (MainWindow *)data;
                         auto file = uiOpenFile(caller_wnd);
-                        if (wnd->on_file_open != nullptr) {
+                        if (wnd->on_file_open != nullptr && file != nullptr) {
                           wnd->on_file_open(std::string(file));
                         }
                       },

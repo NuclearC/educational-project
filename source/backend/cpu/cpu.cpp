@@ -11,14 +11,17 @@ VirtualCpu::VirtualCpu(memory::MemoryController &_mcontrol)
 }
 VirtualCpu::~VirtualCpu() {}
 
-char *VirtualCpu::fetch() { return (char*)mcontrol[regs.rip]; }
+char *VirtualCpu::fetch() { return (char *)mcontrol[regs.RIP.q]; }
 
-void VirtualCpu::set_inst_pointer(uint64_t val) { regs.rip = val; }
+void VirtualCpu::set_inst_pointer(uint64_t val) { regs.RIP.q = val; }
 
-uint64_t VirtualCpu::get_inst_pointer() { return regs.rip; }
+void VirtualCpu::set_stack_pointer(uint64_t val) { regs.RSP.q = val; }
+
+void VirtualCpu::set_base_pointer(uint64_t val) { regs.RBP.q = val; }
+
+uint64_t VirtualCpu::get_inst_pointer() { return regs.RIP.q; }
 
 void VirtualCpu::reset() { 
-  stack = std::stack<uint64_t>();
   regs = {};
 }
 
