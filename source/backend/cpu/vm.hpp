@@ -9,7 +9,6 @@
 #include "backend/memory/memory.hpp"
 
 #include <Zydis/Zydis.h>
-
 #include <asmjit/asmjit.h>
 
 namespace core {
@@ -59,11 +58,24 @@ private:
   bool push_(const ZydisDecodedInstruction &inst);
   bool pop_(const ZydisDecodedInstruction &inst);
 
+  bool test_(const ZydisDecodedInstruction &inst);
   bool cmp_(const ZydisDecodedInstruction &inst);
   bool syscall(const ZydisDecodedInstruction &inst);
 
   bool call_(const ZydisDecodedInstruction &inst);
   bool jmp_(const ZydisDecodedInstruction &inst);
+
+  bool jz_(const ZydisDecodedInstruction &inst);
+  bool jnz_(const ZydisDecodedInstruction &inst);
+  bool js_(const ZydisDecodedInstruction &inst);
+  bool jns_(const ZydisDecodedInstruction &inst);
+  bool jp_(const ZydisDecodedInstruction &inst);
+  bool jnp_(const ZydisDecodedInstruction &inst);
+
+  bool shr_(const ZydisDecodedInstruction &inst);
+  bool sar_(const ZydisDecodedInstruction &inst);
+  bool shl_(const ZydisDecodedInstruction &inst);
+  bool sal_(const ZydisDecodedInstruction &inst);
 
   // unsigned comparisions
   bool jb_jnae_(const ZydisDecodedInstruction &inst);

@@ -19,6 +19,7 @@ RomInfo Reader::read(std::filesystem::path path) {
 
   log("Reading ELF64 headers", LogLevel::kInfo);
   const auto elf_pos = 0;
+
   in.seekg(elf_pos + 0x0);
   in.read((char *)&res.header, sizeof res.header);
   if (strncmp((const char *)res.header.e_ident.magic + 1, "ELF", 3) != 0) {

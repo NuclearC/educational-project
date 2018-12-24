@@ -4,83 +4,6 @@
 namespace core {
 namespace backend {
 namespace cpu {
-//
-// uint64_t VirtualMachine::get_operand_value(const ZydisDecodedOperand
-// &operand) {
-//  switch (operand.type) {
-//  case ZYDIS_OPERAND_TYPE_IMMEDIATE:
-//    return operand.imm.value.u;
-//  case ZYDIS_OPERAND_TYPE_MEMORY: {
-//    switch (operand.mem.type) {
-//    case ZYDIS_MEMOP_TYPE_MIB:
-//      return 0;
-//    case ZYDIS_MEMOP_TYPE_AGEN: {
-//      uint64_t value = 0;
-//      if (operand.mem.base) {
-//        value = cpu.regs.read(operand.mem.base);
-//      }
-//      if (operand.mem.disp.has_displacement) {
-//        value += operand.mem.disp.value;
-//      }
-//
-//      return value;
-//    }
-//    case ZYDIS_MEMOP_TYPE_MEM: {
-//      uint64_t value = 0;
-//      if (operand.mem.base) {
-//        value = cpu.regs.read(operand.mem.base);
-//      }
-//      if (operand.mem.disp.has_displacement) {
-//        value += operand.mem.disp.value;
-//      }
-//      return *(uint64_t *)mcontrol[value];
-//    }
-//    default:
-//      abort(); // should never happen
-//      return 0;
-//    }
-//  }
-//  case ZYDIS_OPERAND_TYPE_REGISTER:
-//    return cpu.regs.read(operand.reg.value);
-//  // case ZYDIS_OPERAND_TYPE_POINTER:
-//  //  return 0;
-//  default:
-//    abort(); // should never happen
-//    return 0;
-//  }
-//}
-//
-// void VirtualMachine::write_operand_value(const ZydisDecodedOperand &operand,
-//                                         uint64_t value) {
-//  switch (operand.type) {
-//  case ZYDIS_OPERAND_TYPE_IMMEDIATE:
-//    _CrtDbgBreak();
-//  case ZYDIS_OPERAND_TYPE_MEMORY: {
-//    switch (operand.mem.type) {
-//    case ZYDIS_MEMOP_TYPE_MEM: {
-//      uint64_t address = 0;
-//      if (operand.mem.base) {
-//        address = cpu.regs.read(operand.mem.base);
-//      }
-//      if (operand.mem.disp.has_displacement) {
-//        address += operand.mem.disp.value;
-//      }
-//      mcontrol.write(address, &value, sizeof value);
-//      break;
-//    }
-//    default:
-//      _CrtDbgBreak();
-//    }
-//  } break;
-//  case ZYDIS_OPERAND_TYPE_REGISTER:
-//    return cpu.regs.write(operand.reg.value, value);
-//  // case ZYDIS_OPERAND_TYPE_POINTER:
-//  //  return 0;
-//  default:
-//    _CrtDbgBreak();
-//  }
-//}
-
 uint64_t VirtualMachine::read_operand(const ZydisDecodedOperand &operand) {
 
   switch (operand.type) {
@@ -276,7 +199,7 @@ bool VirtualMachine::call_(const ZydisDecodedInstruction &inst) {
 }
 
 bool VirtualMachine::neg_(const ZydisDecodedInstruction &inst) {
-  write_operand(inst.operands[0], -read_operand(inst.operands[0]));
+  write_operand(inst.operands[0], (~read_operand(inst.operands[0]) + 1));
   return true;
 }
 
@@ -311,6 +234,83 @@ bool VirtualMachine::jmp_(const ZydisDecodedInstruction &inst) {
   }
   cpu.set_inst_pointer(current);
   return true;
+}
+
+bool VirtualMachine::jz_(const ZydisDecodedInstruction &inst) {
+  if (cpu.regs.FLAGS.q & FlagMasks::kZeroFlag)
+    return jmp_(inst);
+  return true;
+}
+
+bool VirtualMachine::jnz_(const ZydisDecodedInstruction &inst) {
+  if (!(cpu.regs.FLAGS.q & FlagMasks::kZeroFlag))
+    return jmp_(inst);
+  return true;
+}
+
+bool VirtualMachine::js_(const ZydisDecodedInstruction &inst) {
+  if (cpu.regs.FLAGS.q & FlagMasks::kSignFlag)
+    return jmp_(inst);
+  return true;
+}
+
+bool VirtualMachine::jns_(const ZydisDecodedInstruction &inst) {
+  if (!(cpu.regs.FLAGS.q & FlagMasks::kSignFlag))
+    return jmp_(inst);
+  return true;
+}
+
+bool VirtualMachine::jp_(const ZydisDecodedInstruction &inst) {
+  if (cpu.regs.FLAGS.q & FlagMasks::kParityFlag)
+    return jmp_(inst);
+  return true;
+}
+
+bool VirtualMachine::jnp_(const ZydisDecodedInstruction &inst) {
+  if (!(cpu.regs.FLAGS.q & FlagMasks::kParityFlag))
+    return jmp_(inst);
+  return true;
+}
+
+bool VirtualMachine::shr_(const ZydisDecodedInstruction &inst) {
+  const auto op1 = read_operand(inst.operands[0]),
+             op2 = read_operand(inst.operands[1]);
+  write_operand(inst.operands[0], op1 >> op2);
+
+  cpu.regs.FLAGS.q &= ~(FlagMasks::kCarryFlag);
+
+  if ((op1 << (op2 - 1)) & 1)
+    cpu.regs.FLAGS.q |= FlagMasks::kCarryFlag;
+  return true; 
+}
+
+bool VirtualMachine::sar_(const ZydisDecodedInstruction &inst) {
+  const int64_t op1 = read_operand(inst.operands[0]),
+                op2 = read_operand(inst.operands[1]);
+  write_operand(inst.operands[0], op1 >> op2);
+
+  cpu.regs.FLAGS.q &= ~(FlagMasks::kCarryFlag);
+
+  if ((op1 << (op2 - 1)) & 1)
+    cpu.regs.FLAGS.q |= FlagMasks::kCarryFlag;
+  return true;
+}
+
+bool VirtualMachine::shl_(const ZydisDecodedInstruction &inst) {
+  const auto op1 = read_operand(inst.operands[0]),
+             op2 = read_operand(inst.operands[1]);
+  write_operand(inst.operands[0], op1 << op2);
+
+  cpu.regs.FLAGS.q &= ~(FlagMasks::kCarryFlag);
+
+  if ((op1 << (op2 - 1ULL)) & (1ULL << inst.operands[0].size))
+    cpu.regs.FLAGS.q |= FlagMasks::kCarryFlag;
+
+  return true;
+}
+
+bool VirtualMachine::sal_(const ZydisDecodedInstruction &inst) {
+  return shl_(inst);
 }
 
 bool VirtualMachine::jb_jnae_(const ZydisDecodedInstruction &inst) {
@@ -455,12 +455,12 @@ bool VirtualMachine::sub_(const ZydisDecodedInstruction &inst) {
 
 bool VirtualMachine::xor_(const ZydisDecodedInstruction &inst) {
   const auto first_operand = read_operand(inst.operands[0]),
-                second_operand = read_operand(inst.operands[1]),
+             second_operand = read_operand(inst.operands[1]),
              result = first_operand ^ second_operand;
 
-  cpu.regs.FLAGS.q &= ~(FlagMasks::kZeroFlag | FlagMasks::kSignFlag |
-                        FlagMasks::kCarryFlag | FlagMasks::kOverflowFlag |
-                        FlagMasks::kParityFlag);
+  cpu.regs.FLAGS.q &=
+      ~(FlagMasks::kZeroFlag | FlagMasks::kSignFlag | FlagMasks::kCarryFlag |
+        FlagMasks::kOverflowFlag | FlagMasks::kParityFlag);
 
   std::bitset<64> result_bits(result);
   if ((int64_t)result < 0)
@@ -471,12 +471,12 @@ bool VirtualMachine::xor_(const ZydisDecodedInstruction &inst) {
     cpu.regs.FLAGS.q |= FlagMasks::kParityFlag;
 
   write_operand(inst.operands[0], result);
-  return true; 
+  return true;
 }
 
 bool VirtualMachine::and_(const ZydisDecodedInstruction &inst) {
   const auto first_operand = read_operand(inst.operands[0]),
-                second_operand = read_operand(inst.operands[1]),
+             second_operand = read_operand(inst.operands[1]),
              result = first_operand & second_operand;
 
   cpu.regs.FLAGS.q &=
@@ -492,12 +492,12 @@ bool VirtualMachine::and_(const ZydisDecodedInstruction &inst) {
     cpu.regs.FLAGS.q |= FlagMasks::kParityFlag;
 
   write_operand(inst.operands[0], result);
-  return true; 
+  return true;
 }
 
 bool VirtualMachine::or_(const ZydisDecodedInstruction &inst) {
   const auto first_operand = read_operand(inst.operands[0]),
-                second_operand = read_operand(inst.operands[1]),
+             second_operand = read_operand(inst.operands[1]),
              result = first_operand | second_operand;
 
   cpu.regs.FLAGS.q &=
@@ -513,13 +513,36 @@ bool VirtualMachine::or_(const ZydisDecodedInstruction &inst) {
     cpu.regs.FLAGS.q |= FlagMasks::kParityFlag;
 
   write_operand(inst.operands[0], result);
-  return true; 
+  return true;
+}
+
+bool VirtualMachine::test_(const ZydisDecodedInstruction &inst) {
+  const auto first_operand = read_operand(inst.operands[0]),
+             second_operand = read_operand(inst.operands[1]),
+             result = first_operand & second_operand;
+  // 64 bit width max
+  std::bitset<64> result_bits(result), first_bits(first_operand),
+      second_bits(~second_operand + 1);
+
+  // clear all the flags
+  cpu.regs.FLAGS.q &=
+      ~(FlagMasks::kZeroFlag | FlagMasks::kSignFlag | FlagMasks::kCarryFlag |
+        FlagMasks::kOverflowFlag | FlagMasks::kParityFlag);
+
+  if (result == 0)
+    cpu.regs.FLAGS.q |= FlagMasks::kZeroFlag;
+  if (result_bits.count() % 2 == 0)
+    cpu.regs.FLAGS.q |= FlagMasks::kParityFlag;
+  if (result < 0)
+    cpu.regs.FLAGS.q |= FlagMasks::kSignFlag;
+
+  return true;
 }
 
 bool VirtualMachine::cmp_(const ZydisDecodedInstruction &inst) {
   const auto first_operand = read_operand(inst.operands[0]),
-                second_operand = read_operand(inst.operands[1]),
-                result = first_operand - second_operand;
+             second_operand = read_operand(inst.operands[1]),
+             result = first_operand - second_operand;
   // 64 bit width max
   std::bitset<64> result_bits(result), first_bits(first_operand),
       second_bits(~second_operand + 1);
@@ -591,15 +614,28 @@ VirtualMachine::VirtualMachine(VirtualCpu &cpu_,
 
   inst_mappings[ZYDIS_MNEMONIC_NEG] = &VirtualMachine::neg_;
   inst_mappings[ZYDIS_MNEMONIC_CMP] = &VirtualMachine::cmp_;
+  inst_mappings[ZYDIS_MNEMONIC_TEST] = &VirtualMachine::test_;
 
   inst_mappings[ZYDIS_MNEMONIC_XOR] = &VirtualMachine::xor_;
   inst_mappings[ZYDIS_MNEMONIC_OR] = &VirtualMachine::or_;
   inst_mappings[ZYDIS_MNEMONIC_AND] = &VirtualMachine::and_;
 
+  inst_mappings[ZYDIS_MNEMONIC_JZ] = &VirtualMachine::jz_;
+  inst_mappings[ZYDIS_MNEMONIC_JNZ] = &VirtualMachine::jnz_;
+  inst_mappings[ZYDIS_MNEMONIC_JS] = &VirtualMachine::js_;
+  inst_mappings[ZYDIS_MNEMONIC_JNS] = &VirtualMachine::jns_;
+  inst_mappings[ZYDIS_MNEMONIC_JP] = &VirtualMachine::jp_;
+  inst_mappings[ZYDIS_MNEMONIC_JNP] = &VirtualMachine::jnp_;
+
   inst_mappings[ZYDIS_MNEMONIC_JB] = &VirtualMachine::jb_jnae_;
   inst_mappings[ZYDIS_MNEMONIC_JNB] = &VirtualMachine::jae_jnb_;
   inst_mappings[ZYDIS_MNEMONIC_JBE] = &VirtualMachine::jbe_jna_;
   inst_mappings[ZYDIS_MNEMONIC_JNBE] = &VirtualMachine::ja_jnbe_;
+
+  inst_mappings[ZYDIS_MNEMONIC_SHR] = &VirtualMachine::shr_;
+  inst_mappings[ZYDIS_MNEMONIC_SHL] = &VirtualMachine::shl_;
+  inst_mappings[ZYDIS_MNEMONIC_SAR] = &VirtualMachine::sar_;
+  // inst_mappings[ZYDIS_MNEMONIC_SAL] = &VirtualMachine::sal_;
 
   inst_mappings[ZYDIS_MNEMONIC_JL] = &VirtualMachine::jl_jnge_;
   inst_mappings[ZYDIS_MNEMONIC_JNL] = &VirtualMachine::jge_jnl_;

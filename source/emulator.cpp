@@ -65,14 +65,14 @@ void Emulator::load_file(std::filesystem::path path) {
 
   auto &header = rom_info.header;
   auto &program_headers = rom_info.program_header_table;
-  auto &section_headers = rom_info.section_header_table;
+  // auto &section_headers = rom_info.section_header_table;
 
   for (auto &program_header : program_headers) {
     switch (program_header.p_type) {
     case elf64::Elf64_Phdr::PT_LOAD: {
       mcontrol.write(program_header.p_vaddr,
                      rom_info.data.data() + program_header.p_offset,
-                     program_header.p_memsz);
+                     program_header.p_filesz);
     } break;
     }
   }
