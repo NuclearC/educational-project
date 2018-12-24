@@ -2,7 +2,6 @@
 
 namespace core {
 
-  
 void Emulator::create_graphics_window() {
   using namespace core::utils;
   log("creating graphics system", kInfo);
@@ -24,7 +23,7 @@ void Emulator::create_graphics_driver() {
 
 Emulator::Emulator()
     : mcontrol{}, cpu(mcontrol), disasm(cpu, vm), rom_info{},
-      vm(cpu, mcontrol, this), gpu{} {
+      krnl(mcontrol, cpu), vm(cpu, krnl, mcontrol, this), gpu{} {
   create_graphics_window();
 }
 
@@ -35,11 +34,13 @@ void Emulator::state(bool paused_) { paused = paused_; }
 void Emulator::initialize() {
   create_graphics_driver();
 
+  krnl.reset();
   cpu.reset();
   gpu.reset();
 }
 
 void Emulator::reset() {
+  krnl.reset();
   gpu.reset();
   cpu.reset();
 }
@@ -52,6 +53,9 @@ void Emulator::poll() {
     graphics_driver->begin();
 
     graphics_driver->end();
+
+    if (cpu.break_flag())
+      paused = true;
   }
 }
 

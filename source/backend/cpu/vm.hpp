@@ -1,11 +1,12 @@
 #ifndef VM_HPP_
 #define VM_HPP_
 
-#include <memory>
 #include <bitset>
+#include <memory>
 #include <variant>
 
 #include "backend/cpu/cpu.hpp"
+#include "backend/kernel/kernel.hpp"
 #include "backend/memory/memory.hpp"
 
 #include <Zydis/Zydis.h>
@@ -13,28 +14,31 @@
 
 namespace core {
 
-  class Emulator;
+class Emulator;
 
 namespace backend {
 namespace cpu {
 
-  using namespace registers;
+using namespace registers;
 
 typedef uint64_t (*AsmjitFunc)();
 
 class VirtualMachine {
 private:
-
   // asmjit stuff
   asmjit::JitRuntime rt;
 
-  Emulator * emulator;
+  Emulator *emulator;
 
   VirtualCpu &cpu;
+  kernel::Kernel &krnl;
   memory::MemoryController &mcontrol;
 
-  //uint64_t get_operand_value(const ZydisDecodedOperand &operand);
-  //void write_operand_value(const ZydisDecodedOperand &operand, uint64_t value);
+  // uint64_t get_operand_value(const ZydisDecodedOperand &operand);
+  // void write_operand_value(const ZydisDecodedOperand &operand, uint64_t
+  // value);
+
+  void handle_syscall(int op);
 
   uint64_t read_operand(const ZydisDecodedOperand &operand);
   void write_operand(const ZydisDecodedOperand &operand, uint64_t value);
@@ -99,8 +103,8 @@ private:
   InstructionMapping inst_mappings[1582];
 
 public:
-  VirtualMachine(VirtualCpu &cpu_, memory::MemoryController &mcontrol_,
-    Emulator* emul_);
+  VirtualMachine(VirtualCpu &cpu_, kernel::Kernel &krnl_,
+                 memory::MemoryController &mcontrol_, Emulator *emul_);
   ~VirtualMachine();
 
   bool execute_instruction(const ZydisDecodedInstruction &inst);

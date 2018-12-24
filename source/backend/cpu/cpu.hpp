@@ -17,6 +17,9 @@ private:
   // std::stack<uint64_t> stack;
 
   memory::MemoryController &mcontrol;
+
+  bool break_flag_;
+
 public:
   VirtualCpu(memory::MemoryController & _control);
   ~VirtualCpu();
@@ -30,6 +33,12 @@ public:
   uint64_t get_inst_pointer();
   void reset();
   void poll();
+
+  void break_();
+
+  bool break_flag();
+
+  registers::Registers& reg();
 };
 } // namespace cpu
 } // namespace backend

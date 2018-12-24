@@ -4,6 +4,47 @@
 namespace core {
 namespace backend {
 namespace cpu {
+
+void VirtualMachine::handle_syscall(int op) {
+  switch (op) {
+  case 0:
+    return krnl.impl_sys_restart_syscall_();
+  case 1:
+    return krnl.impl_sys_exit_(cpu.reg().read(ZYDIS_REGISTER_EBX));
+  case 2:
+    return krnl.impl_sys_fork_((void *)cpu.reg().read(ZYDIS_REGISTER_RBX));
+  case 3:
+    return krnl.impl_sys_read_(cpu.reg().read(ZYDIS_REGISTER_EBX),
+                               (char *)cpu.reg().read(ZYDIS_REGISTER_RCX),
+                               cpu.reg().read(ZYDIS_REGISTER_EDX));
+  case 4:
+    return krnl.impl_sys_write_(
+        cpu.reg().read(ZYDIS_REGISTER_EBX),
+        (const char *)cpu.reg().read(ZYDIS_REGISTER_RCX),
+        cpu.reg().read(ZYDIS_REGISTER_RDX));
+  case 5:
+    return krnl.impl_sys_open_((const char *)cpu.reg().read(ZYDIS_REGISTER_RBX),
+                               cpu.reg().read(ZYDIS_REGISTER_ECX),
+                               cpu.reg().read(ZYDIS_REGISTER_EDX));
+  case 6:
+    return krnl.impl_sys_close_(cpu.reg().read(ZYDIS_REGISTER_EBX));
+  case 7:
+    return krnl.impl_sys_waitpid_(cpu.reg().read(ZYDIS_REGISTER_EBX),
+                                  (int *)cpu.reg().read(ZYDIS_REGISTER_RCX),
+                                  cpu.reg().read(ZYDIS_REGISTER_EDX));
+  case 8:
+    return krnl.impl_sys_creat_(
+        (const char *)cpu.reg().read(ZYDIS_REGISTER_RBX),
+        cpu.reg().read(ZYDIS_REGISTER_ECX));
+  case 9:
+    return krnl.impl_sys_link_(
+        (const char *)cpu.reg().read(ZYDIS_REGISTER_RBX),
+        (const char *)cpu.reg().read(ZYDIS_REGISTER_RCX));
+  default:
+    throw std::exception("unrealized or unknown syscall");
+  }
+}
+
 uint64_t VirtualMachine::read_operand(const ZydisDecodedOperand &operand) {
 
   switch (operand.type) {
@@ -136,37 +177,8 @@ bool VirtualMachine::int_(const ZydisDecodedInstruction &inst) {
 
   switch (interrupt) {
   case 128: // kernel call
-  {
-    const auto syscall = cpu.regs.read(ZYDIS_REGISTER_RAX);
-    switch (syscall) {
-    case 1: // exit
-    {
-      // hang the emulator
-      const auto return_code = cpu.regs.read(ZYDIS_REGISTER_RBX);
-      core::utils::log("program exited with code " +
-                           std::to_string(return_code),
-                       core::utils::LogLevel::kInfo);
-      emulator->state(true);
-    } break;
-    case 4: // write
-    {
-      const auto file_descriptor = cpu.regs.read(ZYDIS_REGISTER_RBX),
-                 data_pointer = cpu.regs.read(ZYDIS_REGISTER_RCX),
-                 data_length = cpu.regs.read(ZYDIS_REGISTER_RDX);
-
-      if (file_descriptor == 1) {
-        std::cout << std::string((const char *)mcontrol[data_pointer],
-                                 data_length)
-                  << std::endl;
-      }
-
-      return true;
-    } break;
-    default:
-      throw std::exception("unimplemented syscall");
-      return false;
-    }
-  } break;
+    handle_syscall(cpu.reg().read(ZYDIS_REGISTER_EAX));
+    break;
   }
 
   return true;
@@ -281,7 +293,7 @@ bool VirtualMachine::shr_(const ZydisDecodedInstruction &inst) {
 
   if ((op1 << (op2 - 1)) & 1)
     cpu.regs.FLAGS.q |= FlagMasks::kCarryFlag;
-  return true; 
+  return true;
 }
 
 bool VirtualMachine::sar_(const ZydisDecodedInstruction &inst) {
@@ -581,27 +593,19 @@ bool VirtualMachine::cmp_(const ZydisDecodedInstruction &inst) {
 }
 
 bool VirtualMachine::syscall(const ZydisDecodedInstruction &inst) {
-  // switch (cpu.regs.read_general(registers::rax)) {
-  // case 1: {
-  //  const auto count = cpu.regs.read_general(registers::rcx);
-  //  const auto data = cpu.regs.read_general(registers::rdx);
-
-  //  std::cout << std::string((const char *)mcontrol[data], count) <<
-  //  std::endl; return true;
-  //} break;
-  //}
-
-  return false;
+  // core::kernel::syscalls::impl_syscall(cpu);
+  return true;
 }
 
 bool VirtualMachine::recompile(const ZydisDecodedInstruction &inst) {
   return false;
 }
 
-VirtualMachine::VirtualMachine(VirtualCpu &cpu_,
+VirtualMachine::VirtualMachine(VirtualCpu &cpu_, kernel::Kernel &krnl_,
                                memory::MemoryController &mcontrol_,
                                Emulator *emul_)
-    : cpu(cpu_), mcontrol(mcontrol_), inst_mappings{}, emulator(emul_) {
+    : cpu(cpu_), mcontrol(mcontrol_), inst_mappings{}, emulator(emul_),
+      krnl(krnl_) {
   inst_mappings[ZYDIS_MNEMONIC_ADD] = &VirtualMachine::add_;
 
   inst_mappings[ZYDIS_MNEMONIC_PUSH] = &VirtualMachine::push_;

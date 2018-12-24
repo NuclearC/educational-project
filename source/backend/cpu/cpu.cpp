@@ -1,5 +1,4 @@
 #include "backend/cpu/cpu.hpp"
-#include "cpu.hpp"
 
 namespace core {
 namespace backend {
@@ -23,11 +22,18 @@ uint64_t VirtualCpu::get_inst_pointer() { return regs.RIP.q; }
 
 void VirtualCpu::reset() { 
   regs = {};
+  break_flag_ = false;
 }
 
 void VirtualCpu::poll() {
   
 }
+
+void VirtualCpu::break_() { break_flag_ = true; }
+
+bool VirtualCpu::break_flag() { return break_flag_; }
+
+registers::Registers &VirtualCpu::reg() { return regs; }
 
 } // namespace cpu
 } // namespace backend

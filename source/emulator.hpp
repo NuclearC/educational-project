@@ -9,6 +9,8 @@
 #include "backend/graphics/graphics.hpp"
 #include "backend/graphics/gfxwindow.hpp"
 #include "backend/graphics/windows/winapiwindow.hpp"
+#include "backend/kernel/kernel.hpp"
+
 #include "backend/memory/memory.hpp"
 #include "reader.hpp"
 
@@ -21,6 +23,7 @@ private:
   core::backend::cpu::VirtualCpu cpu;
   core::backend::cpu::DisAsm disasm;
   core::backend::memory::MemoryController mcontrol;
+  core::kernel::Kernel krnl;
 
   std::shared_ptr<core::backend::graphics::GraphicsWindow> graphics_window;
   std::unique_ptr<core::backend::graphics::GraphicsDriver> graphics_driver;

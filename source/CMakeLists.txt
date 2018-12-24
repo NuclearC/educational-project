@@ -29,5 +29,5 @@ add_subdirectory(${SRC_DIR}/backend)
 
 add_executable(emulator ${APP_FILES})
 target_link_libraries(emulator ${THIRD_PARTY_LIBS} ${OPENGL_LIBRARIES}
-  emucore-audio emucore-cpu emucore-graphics emucore-memory emucore-opengl-driver emucore-windows)
+  emucore-audio emucore-cpu emucore-graphics emucore-memory emucore-opengl-driver emucore-windows emucore-kernelimpl)
 set_property(TARGET emulator PROPERTY CXX_STANDARD 20)

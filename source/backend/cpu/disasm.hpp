@@ -1,8 +1,8 @@
 #ifndef DISASM_HPP_
 #define DISASM_HPP_
 
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 
 #include <Zydis/Zydis.h>
 
@@ -26,12 +26,11 @@ private:
   VirtualMachine &vm;
 
 public:
-  DisAsm(VirtualCpu &cpu_, VirtualMachine& vm_);
+  DisAsm(VirtualCpu &cpu_, VirtualMachine &vm_);
   ~DisAsm();
 
-  InstructionInfo try_decode(uint64_t pointer, const void *data,
-                                    size_t length);
-  void print(const InstructionInfo& info);
+  InstructionInfo try_decode(uint64_t pointer, const void *data, size_t length);
+  void print(const InstructionInfo &info);
   bool try_execute(const InstructionInfo &info);
 
   void poll();
