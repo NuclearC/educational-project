@@ -36,9 +36,13 @@ void Emulator::initialize() {
   create_graphics_driver();
 
   cpu.reset();
+  gpu.reset();
 }
 
-void Emulator::reset() { cpu.reset(); }
+void Emulator::reset() {
+  gpu.reset();
+  cpu.reset();
+}
 
 void Emulator::poll() {
   if (!paused) {
