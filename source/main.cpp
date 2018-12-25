@@ -65,15 +65,16 @@ int main(int argc, char *argv[]) {
   emu.reset();
 
   std::thread emu_thread = std::thread([&emu]() {
-    try {
-      emu.initialize();
-      while (true) {
-        std::lock_guard guard(mutex);
-        emu.poll();
-      }
-    } catch (std::exception e) {
-      log("Exception thrown: " + std::string(e.what()), LogLevel::kError);
+    /*
+    try {*/
+    emu.initialize();
+    while (true) {
+      std::lock_guard guard(mutex);
+      emu.poll();
     }
+    //} catch (std::exception e) {
+    //  log("Exception thrown: " + std::string(e.what()), LogLevel::kError);
+    //}
   });
 
   uiMain();
